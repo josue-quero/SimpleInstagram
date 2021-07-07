@@ -2,6 +2,7 @@ package com.codepath.simpleinstagram;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,16 +13,18 @@ import com.parse.ParseUser;
 
 public class LaunchActivity extends AppCompatActivity {
 
+    public static Activity launchActivity;
+
     public static final String TAG = "LaunchActivity";
 
     Button btnLoginOption;
     Button btnSignIn;
-    Button getBtnSignIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
+        launchActivity = this;
 
         ParseUser currentUser = ParseUser.getCurrentUser();
         if (currentUser != null) {
