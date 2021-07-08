@@ -17,6 +17,23 @@
         app:layout_scrollFlags="scroll|enterAlways"
         app:titleTextColor="@android:color/white">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/media_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="new post image"
+                android:scaleType="centerCrop"
+                android:src="@drawable/nav_logo_whiteout"
+                android:visibility="visible" />
+        </LinearLayout>
+
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

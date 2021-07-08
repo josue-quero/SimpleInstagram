@@ -33,6 +33,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MainActivity";
+    private EndlessRecyclerViewScrollListener scrollListener;
     private RecyclerView rvPosts;
     private SwipeRefreshLayout swipeContainer;
     protected PostsAdapter adapter;
@@ -50,7 +51,8 @@ public class MainActivity extends AppCompatActivity {
         // set the adapter on the recycler view
         rvPosts.setAdapter(adapter);
         // set the layout manager on the recycler view
-        rvPosts.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        rvPosts.setLayoutManager(linearLayoutManager);
         // query posts from Parstagram
         queryPosts();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -85,7 +87,54 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        scrollListener = new EndlessRecyclerViewScrollListener(linearLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to the bottom of the list
+                loadNextDataFromApi(totalItemsCount);
+            }
+        };
+        // Adds the scroll listener to RecyclerView
+        rvPosts.addOnScrollListener(scrollListener);
 
+    }
+
+    public void loadNextDataFromApi(int offset) {
+        // specify what type of data we want to query - Post.class
+        ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
+        // set skip previous posts
+        query.setSkip(offset);
+        // include data referred by user key
+        query.include(Post.KEY_USER);
+        // limit query to latest 20 items
+        query.setLimit(20);
+        // order posts by creation date (newest first)
+        query.addDescendingOrder("createdAt");
+        // start an asynchronous call for posts
+        query.findInBackground(new FindCallback<Post>() {
+            @Override
+            public void done(List<Post> posts, ParseException e) {
+                // check for errors
+                if (e != null) {
+                    Log.e(TAG, "Issue with getting posts", e);
+                    return;
+                }
+
+                // for debugging purposes let's print every post description to logcat
+                for (Post post : posts) {
+                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
+                }
+
+                // save received posts to list and notify adapter of new data
+
+                // Now we call setRefreshing(false) to signal refresh has finished
+                swipeContainer.setRefreshing(false);
+                allPosts.addAll(offset, posts);
+                adapter.notifyDataSetChanged();
+                scrollListener.resetState();
+            }
+        });
     }
 
 
