@@ -7,7 +7,8 @@
             res/values-vXX/styles.xml, while customizations related to
             backward-compatibility can go here.
         -->
-        <item name="colorAccent">#FFFFFF</item>
+        <item name="android:itemBackground">#000000</item>
+        <item name="colorAccent">#000000</item>
     </style>
 
     <style name="ButtonStyle" parent="@android:style/Widget.Button">

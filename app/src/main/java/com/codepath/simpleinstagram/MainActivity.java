@@ -1,176 +1,75 @@
 package com.codepath.simpleinstagram;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
-import android.app.Application;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
+import android.widget.FrameLayout;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.parse.FindCallback;
-import com.parse.Parse;
-import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
+import com.codepath.simpleinstagram.fragments.HomeFragment;
+import com.codepath.simpleinstagram.fragments.ComposeFragment;
+import com.codepath.simpleinstagram.fragments.ProfileFragment;
+import com.codepath.simpleinstagram.fragments.ProfileGridFragment;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.parse.ParseUser;
-
-import org.json.JSONArray;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MainActivity";
-    private EndlessRecyclerViewScrollListener scrollListener;
-    private RecyclerView rvPosts;
-    private SwipeRefreshLayout swipeContainer;
-    protected PostsAdapter adapter;
-    protected List<Post> allPosts;
+    final FragmentManager fragmentManager = getSupportFragmentManager();
+    public static BottomNavigationView bottomNavigationView;
+    public static MenuItem miActionProgressItem;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        rvPosts = findViewById(R.id.rvPosts);
-        // initialize the array that will hold posts and create a PostsAdapter
-        allPosts = new ArrayList<>();
-        adapter = new PostsAdapter(this, allPosts);
-        // set the adapter on the recycler view
-        rvPosts.setAdapter(adapter);
-        // set the layout manager on the recycler view
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        rvPosts.setLayoutManager(linearLayoutManager);
-        // query posts from Parstagram
-        queryPosts();
+        FrameLayout frameLayout = findViewById(R.id.placeholder);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         // Sets the Toolbar to act as the ActionBar for this Activity window.
         setSupportActionBar(toolbar);
 
-        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
-        // Setup refresh listener which triggers new data loading
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        frameLayout.setPadding(0,0,0,0);
+
+        // define your fragments here
+        final Fragment fragment1 = new HomeFragment();
+        final Fragment fragment2 = new ComposeFragment();
+        final Fragment fragment3 = new ProfileGridFragment();
+
+        bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottom_navigation);
+
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
-            public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
-                queryPosts();
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Fragment fragment;
+                switch (item.getItemId()) {
+                    case R.id.action_favorites:
+                        //item.setIcon(R.drawable.ic_instagram_home_filled_24);
+                        fragment = fragment1;
+                        break;
+                    case R.id.action_schedules:
+                        //item.setIcon(R.drawable.ic_instagram_new_post_filled_24);
+                        fragment = fragment2;
+                        break;
+                    case R.id.action_music:
+                        //item.setIcon(R.drawable.ic_instagram_user_filled_24);
+                        fragment = fragment3;
+                        break;
+                    default: return true;
+                }
+                fragmentManager.beginTransaction().replace(R.id.placeholder, fragment).commit();
+                return true;
             }
         });
-        // Configure the refreshing colors
-        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
-                android.R.color.holo_green_light,
-                android.R.color.holo_orange_light,
-                android.R.color.holo_red_light);
-
-        FloatingActionButton btnLogOut = findViewById(R.id.btnPost);
-        btnLogOut.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v){
-                // Compose icon has been selected
-                //Navigate to compose activity
-                Intent intent = new Intent(MainActivity.this, AddPostActivity.class);
-                //startActivityForResult(intent, REQUEST_CODE);
-                startActivity(intent);
-            }
-        });
-
-        scrollListener = new EndlessRecyclerViewScrollListener(linearLayoutManager) {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                // Triggered only when new data needs to be appended to the list
-                // Add whatever code is needed to append new items to the bottom of the list
-                loadNextDataFromApi(totalItemsCount);
-            }
-        };
-        // Adds the scroll listener to RecyclerView
-        rvPosts.addOnScrollListener(scrollListener);
-
-    }
-
-    public void loadNextDataFromApi(int offset) {
-        // specify what type of data we want to query - Post.class
-        ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
-        // set skip previous posts
-        query.setSkip(offset);
-        // include data referred by user key
-        query.include(Post.KEY_USER);
-        // limit query to latest 20 items
-        query.setLimit(20);
-        // order posts by creation date (newest first)
-        query.addDescendingOrder("createdAt");
-        // start an asynchronous call for posts
-        query.findInBackground(new FindCallback<Post>() {
-            @Override
-            public void done(List<Post> posts, ParseException e) {
-                // check for errors
-                if (e != null) {
-                    Log.e(TAG, "Issue with getting posts", e);
-                    return;
-                }
-
-                // for debugging purposes let's print every post description to logcat
-                for (Post post : posts) {
-                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
-                }
-
-                // save received posts to list and notify adapter of new data
-
-                // Now we call setRefreshing(false) to signal refresh has finished
-                swipeContainer.setRefreshing(false);
-                allPosts.addAll(offset, posts);
-                adapter.notifyDataSetChanged();
-                scrollListener.resetState();
-            }
-        });
-    }
-
-
-    private void queryPosts() {
-        // specify what type of data we want to query - Post.class
-        ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
-        // include data referred by user key
-        query.include(Post.KEY_USER);
-        // limit query to latest 20 items
-        query.setLimit(20);
-        // order posts by creation date (newest first)
-        query.addDescendingOrder("createdAt");
-        // start an asynchronous call for posts
-        query.findInBackground(new FindCallback<Post>() {
-            @Override
-            public void done(List<Post> posts, ParseException e) {
-                // check for errors
-                if (e != null) {
-                    Log.e(TAG, "Issue with getting posts", e);
-                    return;
-                }
-
-                // for debugging purposes let's print every post description to logcat
-                for (Post post : posts) {
-                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
-                }
-
-                // save received posts to list and notify adapter of new data
-
-                // Now we call setRefreshing(false) to signal refresh has finished
-                swipeContainer.setRefreshing(false);
-                allPosts.clear();
-                allPosts.addAll(posts);
-                adapter.notifyDataSetChanged();
-            }
-        });
+        bottomNavigationView.setSelectedItemId(R.id.action_favorites);
     }
 
     @Override
@@ -192,9 +91,28 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // Store instance of the menu item containing progress
+        miActionProgressItem = menu.findItem(R.id.miActionProgress);
+
+        // Return to finish
+        return super.onPrepareOptionsMenu(menu);
+    }
+
     private void goLaunchActivity(){
         Intent i = new Intent(this, LaunchActivity.class);
         startActivity(i);
         finish();
+    }
+
+    public static void showProgressBar() {
+        // Show progress item
+        miActionProgressItem.setVisible(true);
+    }
+
+    public static void hideProgressBar() {
+        // Hide progress item
+        miActionProgressItem.setVisible(false);
     }
 }

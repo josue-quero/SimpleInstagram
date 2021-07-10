@@ -5,7 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="10dp"
-    tools:context=".TweetDetailsActivity">
+    tools:context=".DetailsActivity">
+
+    <ImageView
+        android:id="@+id/ivProfile"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/ic_instagram_user_outline_24" />
 
     <TextView
         android:id="@+id/tvName"
@@ -13,6 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginTop="5dp"
+        android:layout_toEndOf="@+id/ivProfile"
         android:text="TextView" />
 
     <TextView
@@ -20,9 +27,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/tvName"
-        android:layout_alignParentStart="true"
         android:layout_marginStart="10dp"
         android:layout_marginTop="10dp"
+        android:layout_toEndOf="@+id/ivProfile"
         android:autoLink="all"
         android:linksClickable="true"
         android:text="TextView" />
@@ -31,7 +38,7 @@
         android:id="@+id/ivMedia"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tvBody"
+        android:layout_below="@+id/ivProfile"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
         tools:srcCompat="@tools:sample/avatars" />
@@ -42,6 +49,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
+        android:layout_marginStart="10dp"
         android:layout_marginTop="5dp"
         android:layout_marginEnd="10dp"
         android:text="TextView" />

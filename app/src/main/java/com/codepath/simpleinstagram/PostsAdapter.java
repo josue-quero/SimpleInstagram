@@ -2,6 +2,7 @@ package com.codepath.simpleinstagram;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,10 +10,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.codepath.simpleinstagram.fragments.HomeFragment;
+import com.codepath.simpleinstagram.fragments.ProfileGridFragment;
 import com.parse.ParseFile;
+import com.parse.ParseUser;
 
 import org.parceler.Parcels;
 
@@ -52,6 +58,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
 
         private TextView tvUsername;
         private ImageView ivImage;
+        private ImageView ivProfilePicture;
         private TextView tvDescription;
         private TextView tvTime;
 
@@ -61,6 +68,8 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
             ivImage = itemView.findViewById(R.id.ivImage);
             tvDescription = itemView.findViewById(R.id.tvDescription);
             tvTime = itemView.findViewById(R.id.tvTime);
+            ivProfilePicture = itemView.findViewById(R.id.ivProfilePicture);
+
             itemView.setOnClickListener(this);
         }
 
@@ -90,6 +99,13 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
             ParseFile image = post.getImage();
             if (image != null) {
                 Glide.with(context).load(image.getUrl()).into(ivImage);
+            }
+
+            Log.i("Emergency", post.getUser().getUsername());
+            Log.i("Another Emergency", ParseUser.getCurrentUser().getUsername());
+            ParseFile profileImage = ParseUser.getCurrentUser().getParseFile("profile_image");
+            if (profileImage != null && post.getUser().getUsername().equals(ParseUser.getCurrentUser().getUsername())) {
+                Glide.with(context).load(profileImage.getUrl()).circleCrop().into(ivProfilePicture);
             }
         }
     }

@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.parse.ParseFile;
+import com.parse.ParseUser;
 
 import org.parceler.Parcels;
 
@@ -25,6 +26,7 @@ public class DetailsActivity extends AppCompatActivity {
     TextView tvBody;
     TextView tvRelativeTime;
     TextView tvName;
+    ImageView ivProfile;
 
 
     @Override
@@ -37,6 +39,7 @@ public class DetailsActivity extends AppCompatActivity {
         tvName = findViewById(R.id.tvName);
         tvRelativeTime = findViewById(R.id.tvRelativeTime);
         ivMedia = findViewById(R.id.ivMedia);
+        ivProfile = findViewById(R.id.ivProfile);
 
         tvBody.setText(post.getDescription());
         tvName.setText(post.getUser().getUsername());
@@ -51,6 +54,11 @@ public class DetailsActivity extends AppCompatActivity {
             ivMedia.setVisibility(View.VISIBLE);
         } else {
             ivMedia.setVisibility(View.GONE);
+        }
+
+        ParseFile profileImage = ParseUser.getCurrentUser().getParseFile("profile_image");
+        if (profileImage != null && post.getUser().getUsername().equals(ParseUser.getCurrentUser().getUsername())) {
+            Glide.with(this).load(profileImage.getUrl()).circleCrop().into(ivProfile);
         }
     }
 }
